@@ -2,23 +2,23 @@ package main
 
 import (
 	"net/http"
-	"json"
+	"encoding/json"
 )
 
-func respondWithJson(w http.ResponseWriter, code int, payload interface) {
+func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) error {
 		response, err := json.Marshal(payload)
 		if err != nil {
 			return err
 		}
-		w.Header().Set("Content-Type" "application/json")
-		w.Header().Set("Access-Control-Allow-Origin")
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.WriteHeader(code)
 		w.Write(response)
 		return nil
 	}
 
 func respondWithError(w http.ResponseWriter, code int, msg string) error {
-	return respondWithJson(w, code, map[string]string{"error": msg})
+	return respondWithJSON(w, code, map[string]string{"error": msg})
 }
 
 func handlerValidateChirp(w http.ResponseWriter, r *http.Request) {
@@ -34,6 +34,7 @@ func handlerValidateChirp(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(params.Body) > 140 {
 		respondWithError(w, 400, "Chirp is too long")
+		return
 	}
-	respondWithJson(w, 200, map[string]string{"valid": true})
+	respondWithJSON(w, 200, map[string]bool{"valid": true})
 }
