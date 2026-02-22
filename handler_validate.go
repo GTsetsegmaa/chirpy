@@ -10,7 +10,7 @@ func handlerValidateChirp(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Body string `json:"body"`
 	}
-	type cleanedBody struct {
+	type returnVals struct {
 		CleanedBody string `json:"cleaned_body"`
 	}
 
@@ -21,52 +21,33 @@ func handlerValidateChirp(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters", err)
 		return
 	}
-	if len(params.Body) > 140 {
+
+	const maxChirpLength = 140
+	if len(params.Body) > maxChirpLength {
 		respondWithError(w, http.StatusBadRequest, "Chirp is too long", nil)
 		return
 	}
 
-	cleaned := replaceProfane(params.Body)
+	badWords := map[string]struct{}{
+		"kerfuffle": {},
+		"sharbert":  {},
+		"fornax":    {},
+	}
+	cleaned := replaceProfane(params.Body, badWords)
 
-	respondWithJSON(w, http.StatusOK, cleanedBody{
+	respondWithJSON(w, http.StatusOK, returnVals{
 		CleanedBody: cleaned,
 	})
 }
 
-func replaceProfane(text string) string{
+func replaceProfane(text string, badWords map[string]struct{}) string{
 	words := strings.Split(text, " ")
 	for i, word := range words {
-		if strings.ToLower(word) == "kerfuffle" || strings.ToLower(word) == "sharbert" || strings.ToLower(word) == "fornax" {
-			words[i] = "****"
-		}
-	}
-	return strings.Join(words, " ")
-}
-
-func temp(w http.ResponseWriter, r *http.Request) {
-	type parameters struct {
-		Body string `json:"body"`
-	}
-	type cleanedBody struct {
-		CleanedBody string `json:"cleaned_body"`
-	}
-
-	decoder := json.NewDecoder(r.Body) 
-	params := parameters{}
-	err := decoder.Decode(&params)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters", err)
-		return
-	}
-
-	words := strings.Split(params.Body, " ")
-	for i, word := range words {
-		if strings.ToLower(word) == "kerfuffle" || strings.ToLower(word) == "sharbert" || strings.ToLower(word) == "fornax" {
+		loweredWord := strings.ToLower(word)
+		if _, ok := badWords[loweredWord]; ok {
 			words[i] = "****"
 		}
 	}
 	cleaned := strings.Join(words, " ")
-	respondWithJSON(w, 200, cleanedBody{
-		CleanedBody: cleaned,
-	})
+	return cleaned
 }
