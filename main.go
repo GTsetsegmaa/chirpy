@@ -7,23 +7,15 @@ import (
 	"net/http"
 	"os"
 	"sync/atomic"
-	"time"
 
 	"github.com/joho/godotenv"
-	"github.com/google/uuid"
 	_ "github.com/lib/pq"
 )
 
 type apiConfig struct {
 	fileserverHits atomic.Int32
 	db             *database.Queries
-}
-
-type User struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Email     string    `json:"email"`
+	platform       string
 }
 
 func main() {
@@ -34,6 +26,10 @@ func main() {
 	dbURL := os.Getenv("DB_URL")
 	if dbURL == "" {
 		log.Fatal("DB_URL must be set")
+	}
+	platform := os.Getenv("PLATFORM")
+	if platform == "" {
+		log.Fatal("PLATFORM must be set")
 	}
 
 	dbConn, err := sql.Open("postgres", dbURL)
@@ -52,7 +48,8 @@ func main() {
 	mux.Handle("/app/", fsHandler)
 
 	mux.HandleFunc("GET /api/healthz", handlerReadiness)
-	mux.HandleFunc("POST /api/validate_chirp", handlerValidateChirp)
+
+	mux.HandleFunc("POST /api/chirps", apiCfg.handlerChirpsCreate)
 	mux.HandleFunc("POST /api/users", apiCfg.handlerCreateUsers)
 
 	mux.HandleFunc("POST /admin/reset", apiCfg.handlerReset)
