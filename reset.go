@@ -7,8 +7,8 @@ func (cfg *apiConfig) handlerReset(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden)
 		w.Write([]byte("Reset is only allowed on dev environment."))
 		return
-
 	}
+
 	cfg.fileserverHits.Store(0)
 	err := cfg.db.Reset(r.Context())
 	if err != nil {
