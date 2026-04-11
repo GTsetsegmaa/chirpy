@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func TestCheckPassowrdHash(t *testing.T) {
+func TestCheckPasswordHash(t *testing.T) {
 	password1 := "correctPassword123!"
 	password2 := "anotherPassword456!"
 	hash1, _ := HashPassword(password1)
@@ -32,7 +32,7 @@ func TestCheckPassowrdHash(t *testing.T) {
 			password:      "wrongPassword",
 			hash:          hash1,
 			wantErr:       false,
-			matchPassword: true,
+			matchPassword: false,
 		},
 		{
 			name:          "Password doesn't match different hash",

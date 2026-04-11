@@ -11,7 +11,6 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Email    		 string `json:"email"`
 		Password 	     string `json:"password"`
-		ExpiresInSeconds *int   `json:"expires_in_seconds"`
 	}
 	type response struct {
 		User
@@ -38,12 +37,7 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	expiresInSeconds := 3600
-	if params.ExpiresInSeconds != nil && *params.ExpiresInSeconds < 3600 {
-		expiresInSeconds = *params.ExpiresInSeconds
-	}
-
-	token, err := auth.MakeJWT(user.ID, cfg.jwtSecret, time.Duration(expiresInSeconds)*time.Second)
+	token, err := auth.MakeJWT(user.ID, cfg.jwtSecret, time.Duration(3600)*time.Second)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create token", err)
 		return
