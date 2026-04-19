@@ -2,6 +2,7 @@ package main
 
 import (
 	"chirpy/internal/auth"
+	"chirpy/internal/database"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -37,11 +38,23 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := auth.MakeJWT(user.ID, cfg.jwtSecret, time.Duration(3600)*time.Second)
+	expiresInSeconds := 3600
+	if params.ExpiresInSeconds != nil && *params.ExpiresInSeconds < 3600 {
+		expiresInSeconds = *params.ExpiresInSeconds
+	}
+
+	token, err := auth.MakeJWT(user.ID, cfg.jwtSecret, time.Duration(expiresInSeconds)*time.Second)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create token", err)
 		return
 	}
+
+	refreshToken := auth.MakeRefreshToken()
+
+	refreshT, err := cfg.db.CreateRefreshToken(r.Context(), database.CreateRefreshTokenParams{
+		Token: 	   token, 
+		UserID:    user.ID, 
+		ExpiresAt: time.Now().UTC().Add(time.Hour * 24 * 60)})
 
 	respondWithJSON(w, http.StatusOK, response{
 		User: User{
@@ -50,6 +63,6 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 			UpdatedAt: user.UpdatedAt,
 			Email:     user.Email,
 		},
-		Token: token,
+		Token: jwtToken,
 	})
 }
