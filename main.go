@@ -40,6 +40,9 @@ func main() {
 	dbQueries := database.New(dbConn)
 
 	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Fatal("JWT_SECRET enviornment variable is not set")
+	}
 
 	apiCfg := apiConfig{
 		fileserverHits: atomic.Int32{},

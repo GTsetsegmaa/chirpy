@@ -1,13 +1,13 @@
 package main
 
 import (
-	"chirpy/internal/database"
 	"encoding/json"
 	"errors"
 	"net/http"
 	"strings"
 	"time"
 
+	"chirpy/internal/database"
 	"chirpy/internal/auth"
 	"github.com/google/uuid"
 )
@@ -25,14 +25,6 @@ func (cfg *apiConfig) handlerChirpsCreate(w http.ResponseWriter, r *http.Request
 		Body   string    `json:"body"`
 	}
 
-	decoder := json.NewDecoder(r.Body)
-	params := parameters{}
-	err := decoder.Decode(&params)
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters", err)
-		return
-	}
-
 	token, err := auth.GetBearerToken(r.Header)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error(), err)
@@ -42,6 +34,14 @@ func (cfg *apiConfig) handlerChirpsCreate(w http.ResponseWriter, r *http.Request
 	userID, err := auth.ValidateJWT(token, cfg.jwtSecret)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, err.Error(), err)
+		return
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	params := parameters{}
+	err = decoder.Decode(&params)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters", err)
 		return
 	}
 
