@@ -1,9 +1,7 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
-	"errors"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -59,10 +57,11 @@ func (cfg *apiConfig) handlerUsersUpdate(w http.ResponseWriter, r *http.Request)
 
 	respondWithJSON(w, http.StatusOK, response{
 		User: User{
-			ID:        user.ID,
-			CreatedAt: user.CreatedAt,
-			UpdatedAt: user.UpdatedAt,
-			Email:     user.Email,
+			ID:          user.ID,
+			CreatedAt:   user.CreatedAt,
+			UpdatedAt:   user.UpdatedAt,
+			Email:       user.Email,
+			IsChirpyRed: user.IsChirpyRed,
 		},
 	})
 }
@@ -94,12 +93,8 @@ func (cfg *apiConfig) handlerUsersUpdateToChirpyRed(w http.ResponseWriter, r *ht
 		return
 	}
 
-	_, err = cfg.db.UpgradeUserToChirpyRed(r.Context(), userID)
+	err = cfg.db.UpgradeUserToChirpyRed(r.Context(), userID)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			respondWithError(w, http.StatusNotFound, "User not found", err)
-			return
-		}
 		respondWithError(w, http.StatusInternalServerError, "Couldn't upgrade user", err)
 		return
 	}

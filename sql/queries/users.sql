@@ -22,7 +22,7 @@ SET
 WHERE id = $1
 RETURNING *;
 
--- name: UpgradeUserToChirpyRed :one
+-- name: UpgradeUserToChirpyRed :exec
 UPDATE users
 SET
     is_chirpy_red = TRUE
