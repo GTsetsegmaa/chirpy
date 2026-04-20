@@ -27,7 +27,7 @@ func (cfg *apiConfig) handlerChirpsDelete(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	chirp, err := cfg.db.GetChirp(r.Context(), userID)
+	chirp, err := cfg.db.GetChirp(r.Context(), chirpID)
 	if err != nil {
 		respondWithError(w, http.StatusNotFound, "Couldn't find chirp", err)
 		return
