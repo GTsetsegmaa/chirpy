@@ -1,11 +1,14 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"net/http"
 
-	"github.com/gtsetsegmaa/chirpy/internal/database"
+	"github.com/google/uuid"
 	"github.com/gtsetsegmaa/chirpy/internal/auth"
+	"github.com/gtsetsegmaa/chirpy/internal/database"
 )
 
 func (cfg *apiConfig) handlerUsersUpdate(w http.ResponseWriter, r *http.Request) {
@@ -62,4 +65,44 @@ func (cfg *apiConfig) handlerUsersUpdate(w http.ResponseWriter, r *http.Request)
 			Email:     user.Email,
 		},
 	})
+}
+
+func (cfg *apiConfig) handlerUsersUpdateToChirpyRed(w http.ResponseWriter, r *http.Request) {
+	type parameters struct {
+		Event string `json:"event"`
+		Data  struct {
+			UserID string `json:"user_id"`
+		} `json:"data"`
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	params := parameters{}
+	err := decoder.Decode(&params)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't decode", err)
+		return
+	}
+
+	if params.Event != "user.upgraded" {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	userID, err := uuid.Parse(params.Data.UserID)
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, "Couldn't find user", err)
+		return
+	}
+
+	_, err = cfg.db.UpgradeUserToChirpyRed(r.Context(), userID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			respondWithError(w, http.StatusNotFound, "User not found", err)
+			return
+		}
+		respondWithError(w, http.StatusInternalServerError, "Couldn't upgrade user", err)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
