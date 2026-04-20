@@ -100,3 +100,17 @@ func MakeRefreshToken() string {
 	rand.Read(token)
 	return hex.EncodeToString(token)
 }
+
+func GetAPIKey(headers http.Header) (string, error) {
+	auth := headers.Get("Authorization")
+	if auth == "" {
+		return "", fmt.Errorf("header is empty")
+	}
+
+	splitAuth := strings.Split(auth, " ")
+	if splitAuth[0] != "ApiKey" {
+		return "", fmt.Errorf("prefix isn't 'ApiKey'")
+	}
+
+	return splitAuth[1], nil
+}

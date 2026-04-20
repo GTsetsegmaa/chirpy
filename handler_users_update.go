@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -74,9 +75,20 @@ func (cfg *apiConfig) handlerUsersUpdateToChirpyRed(w http.ResponseWriter, r *ht
 		} `json:"data"`
 	}
 
+	key, err := auth.GetAPIKey(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "Polka authentication failed", err)
+		return
+	}
+
+	if key != cfg.polka {
+		respondWithError(w, http.StatusUnauthorized, "Polka authentication failed", errors.New("Api key does not match"))
+		return
+	}
+
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
-	err := decoder.Decode(&params)
+	err = decoder.Decode(&params)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't decode", err)
 		return
