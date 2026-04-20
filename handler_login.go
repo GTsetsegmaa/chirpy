@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"time"
 
-	"chirpy/internal/auth"
-	"chirpy/internal/database"
+	"github.com/gtsetsegmaa/chirpy/internal/auth"
+	"github.com/gtsetsegmaa/chirpy/internal/database"
 )
 
 func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {

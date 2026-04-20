@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"chirpy/internal/database"
-	"chirpy/internal/auth"
+	"github.com/gtsetsegmaa/chirpy/internal/database"
+	"github.com/gtsetsegmaa/chirpy/internal/auth"
 	"github.com/google/uuid"
 )
 
@@ -33,7 +33,7 @@ func (cfg *apiConfig) handlerChirpsCreate(w http.ResponseWriter, r *http.Request
 
 	userID, err := auth.ValidateJWT(token, cfg.jwtSecret)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, err.Error(), err)
+		respondWithError(w, http.StatusUnauthorized, err.Error(), err)
 		return
 	}
 

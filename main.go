@@ -1,13 +1,13 @@
 package main
 
 import (
-	"chirpy/internal/database"
 	"database/sql"
 	"log"
 	"net/http"
 	"os"
 	"sync/atomic"
 
+	"github.com/gtsetsegmaa/chirpy/internal/database"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
@@ -58,6 +58,7 @@ func main() {
 	mux.HandleFunc("GET /api/healthz", handlerReadiness)
 	mux.HandleFunc("POST /api/login", apiCfg.handlerLogin)
 	mux.HandleFunc("POST /api/users", apiCfg.handlerUsersCreate)
+	mux.HandleFunc("PUT /api/users", apiCfg.handlerUsersUpdate)
 
 	mux.HandleFunc("POST /api/refresh", apiCfg.handlerRefresh)
 	mux.HandleFunc("POST /api/revoke", apiCfg.handlerRevoke)

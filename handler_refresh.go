@@ -4,8 +4,7 @@ import (
 	"net/http"
 	"time"
 
-
-	"chirpy/internal/auth"
+	"github.com/gtsetsegmaa/chirpy/internal/auth"
 )
 
 func (cfg *apiConfig) handlerRefresh(w http.ResponseWriter, r *http.Request) {
@@ -19,7 +18,7 @@ func (cfg *apiConfig) handlerRefresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user , err := cfg.db.GetUserFromRefreshToken(r.Context(), refreshToken)
+	user, err := cfg.db.GetUserFromRefreshToken(r.Context(), refreshToken)
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "Couldn't get user for refresh token", err)
 		return

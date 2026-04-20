@@ -1,4 +1,4 @@
-module chirpy
+module github.com/gtsetsegmaa/chirpy
 
 go 1.25.5
 
