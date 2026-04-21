@@ -1,9 +1,11 @@
 package main
 
-import(
+import (
 	"net/http"
+	"sort"
 
 	"github.com/google/uuid"
+	"github.com/gtsetsegmaa/chirpy/internal/database"
 )
 
 func (cfg *apiConfig) handlerChirpsGet(w http.ResponseWriter, r *http.Request) {
@@ -29,45 +31,52 @@ func (cfg *apiConfig) handlerChirpsGet(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func authorIDFromRequest(r *http.Request) (uuid.UUID, error) {
+	authorIDString := r.URL.Query().Get("author_id")
+	if authorIDString == "" {
+		return uuid.Nil, nil
+	}
+	authorID, err := uuid.Parse(authorIDString)
+	if err != nil {
+		return uuid.Nil, err
+	}
+	return authorID, nil
+}
+
 func (cfg *apiConfig) handlerChirpsRetrieve(w http.ResponseWriter, r *http.Request) {
-	chirps := []Chirp{}
-	author := r.URL.Query().Get("author_id")
-	if author != "" {
-		authorID, err := uuid.Parse(author)
-		if err != nil {
-			respondWithError(w, http.StatusInternalServerError, "Couldn't change author ID to uuid", err)
-			return
-		}
-		dbChirps, err := cfg.db.GetChirpsByAuthor(r.Context(), authorID)
-		if err != nil {
-			respondWithError(w, http.StatusInternalServerError, "Couldn't get chirps", err)
-			return
-		}
-		for _, dbChirp := range dbChirps {
-			chirps = append(chirps, Chirp{
-				ID:        dbChirp.ID,
-				CreatedAt: dbChirp.CreatedAt,
-				UpdatedAt: dbChirp.UpdatedAt,
-				Body:      dbChirp.Body,
-				UserID:    dbChirp.UserID,
-			})
-		}
-		respondWithJSON(w, http.StatusOK, chirps)
+	authorID, err := authorIDFromRequest(r)
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, "Invalid author ID", err)
 		return
 	}
 
-	dbChirps, err := cfg.db.GetChirps(r.Context())
+	var dbChirps []database.Chirp
+
+	if authorID != uuid.Nil {
+		dbChirps, err = cfg.db.GetChirpsByAuthor(r.Context(), authorID)
+	} else {
+		dbChirps, err = cfg.db.GetChirps(r.Context())
+	}
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Couldn't get chirps", err)
+		respondWithError(w, http.StatusInternalServerError, "Couldn't retrieve chirps", err)
 		return
 	}
+
+	chirps := []Chirp{}	
 	for _, dbChirp := range dbChirps {
 		chirps = append(chirps, Chirp{
 			ID:        dbChirp.ID,
 			CreatedAt: dbChirp.CreatedAt,
 			UpdatedAt: dbChirp.UpdatedAt,
-			Body:      dbChirp.Body,
 			UserID:    dbChirp.UserID,
+			Body:      dbChirp.Body,
+		})
+	}
+
+	sortChirpsBy := r.URL.Query().Get("sort")
+	if sortChirpsBy == "desc" {
+		sort.Slice(chirps, func(i, j int) bool {
+			return chirps[i].CreatedAt.After(chirps[j].CreatedAt)
 		})
 	}
 
